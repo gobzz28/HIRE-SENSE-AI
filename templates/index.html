@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HireSense AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </head>
+  <body data-api-configured="{{ 'true' if api_configured else 'false' }}">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">HS</div>
+        <div>
+          <h1>HireSense AI</h1>
+          <p>Resume, portfolio, interview, and hiring-readiness workspace</p>
+        </div>
+      </div>
+      <div class="status-pill" id="apiStatus">
+        <i data-lucide="cpu"></i>
+        <span>{{ model }}</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="profile-panel" aria-label="Candidate profile">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Candidate</p>
+            <h2>Profile Input</h2>
+          </div>
+          <button class="icon-button" id="saveProfileTop" title="Save profile">
+            <i data-lucide="save"></i>
+          </button>
+        </div>
+
+        <form id="profileForm" class="profile-form">
+          <div class="form-section-title">Bio Data</div>
+
+          <div class="photo-upload">
+            <div class="photo-preview" id="photoPreview" aria-hidden="true">
+              <span>Photo</span>
+            </div>
+            <label class="photo-control">
+              Profile picture
+              <input id="profilePhoto" name="profile_photo" type="file" accept="image/*">
+              <span>Upload a clear passport-style photo for the resume header.</span>
+            </label>
+          </div>
+
+          <label>
+            Resume model / theme
+            <select id="resumeTheme" name="resume_theme">
+              <option value="modern" selected>Modern Teal</option>
+              <option value="classic">Classic Blue</option>
+              <option value="executive">Executive Black</option>
+              <option value="creative">Creative Violet</option>
+            </select>
+          </label>
+
+          <label>
+            Name
+            <input id="name" name="name" autocomplete="name" placeholder="Gopika">
+          </label>
+
+          <label>
+            Target role
+            <select id="targetRole" name="target_role">
+              <option value="Python Developer">Python Developer</option>
+              <option value="Web Developer">Web Developer</option>
+              <option value="AI Developer" selected>AI Developer</option>
+              <option value="App Developer">App Developer</option>
+              <option value="Java Developer">Java Developer</option>
+            </select>
+          </label>
+
+          <div class="location-grid">
+            <label>
+              State
+              <select id="state" name="state">
+                <option value="">Select state</option>
+                <option value="Tamil Nadu" selected>Tamil Nadu</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Delhi">Delhi</option>
+              </select>
+            </label>
+
+            <label>
+              City
+              <select id="city" name="city">
+                <option value="">Select city</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="contact-grid">
+            <label>
+              Phone number
+              <div class="phone-field">
+                <select id="phoneCountryCode" name="phone_country_code" aria-label="Phone country code">
+                  <option value="+91" selected>IN +91</option>
+                  <option value="+1">US +1</option>
+                  <option value="+44">UK +44</option>
+                  <option value="+61">AU +61</option>
+                  <option value="+971">UAE +971</option>
+                  <option value="+65">SG +65</option>
+                </select>
+                <input id="phone" name="phone" autocomplete="tel" placeholder="98765 43210">
+              </div>
+            </label>
+
+            <label>
+              Email address
+              <input id="email" name="email" type="email" autocomplete="email" placeholder="name@example.com">
+            </label>
+          </div>
+
+          <label>
+            LinkedIn / profile link
+            <input id="linkedin" name="linkedin" type="url" autocomplete="url" placeholder="https://www.linkedin.com/in/your-name">
+          </label>
+
+          <div class="form-section-title">Education</div>
+
+          <label>
+            Bachelor's degree name
+            <input id="degreeName" name="degree_name" placeholder="BSc Computer Science with Data Analytics">
+          </label>
+
+          <label>
+            College name
+            <input id="collegeName" name="college_name" placeholder="Kongunadu Arts and Science College">
+          </label>
+
+          <label>
+            University name
+            <input id="universityName" name="university_name" placeholder="Bharathiar University">
+          </label>
+
+          <div class="education-grid">
+            <label>
+              Degree year
+              <input id="degreeYear" name="degree_year" placeholder="2024-2027">
+            </label>
+
+            <label>
+              CGPA / Percentage
+              <input id="degreeScore" name="degree_score" placeholder="8.5 CGPA or 85%">
+            </label>
+          </div>
+
+          <div class="education-grid">
+            <label>
+              Higher Secondary school
+              <input id="hscSchool" name="hsc_school" placeholder="School name">
+            </label>
+
+            <label>
+              12th year
+              <input id="hscYear" name="hsc_year" placeholder="2024">
+            </label>
+          </div>
+
+          <label>
+            12th percentage
+            <input id="hscScore" name="hsc_score" placeholder="Percentage: 85%">
+          </label>
+
+          <div class="education-grid">
+            <label>
+              SSLC school
+              <input id="sslcSchool" name="sslc_school" placeholder="School name">
+            </label>
+
+            <label>
+              10th year
+              <input id="sslcYear" name="sslc_year" placeholder="2022">
+            </label>
+          </div>
+
+          <label>
+            10th percentage
+            <input id="sslcScore" name="sslc_score" placeholder="Percentage: 90%">
+          </label>
+
+          <div class="form-section-title">Skills</div>
+
+          <label>
+            Skills list
+            <textarea id="skills" name="skills" rows="6" placeholder="MS Office (Word, Excel, PowerPoint)&#10;Communication Skills&#10;Teamwork & Leadership&#10;Problem Solving&#10;Python&#10;Java"></textarea>
+          </label>
+
+          <label>
+            Resume notes, projects, achievements
+            <textarea id="candidateNotes" name="candidate_notes" rows="10" placeholder="Project: HireSense AI&#10;Built a resume, portfolio, and interview simulation platform..."></textarea>
+          </label>
+
+          <label>
+            Target job description
+            <textarea id="jobDescription" name="job_description" rows="8" placeholder="Paste role requirements, keywords, responsibilities, or leave blank."></textarea>
+          </label>
+
+          <button type="submit" class="primary-button">
+            <i data-lucide="save"></i>
+            Save Profile
+          </button>
+        </form>
+      </aside>
+
+      <section class="main-panel" aria-label="HireSense tools">
+        <div class="tool-header">
+          <div>
+            <p class="eyebrow">Workspace</p>
+            <h2 id="activeTitle">ATS Resume Builder</h2>
+          </div>
+          <div class="tool-actions">
+            <button class="icon-button" id="copyOutput" title="Copy output">
+              <i data-lucide="copy"></i>
+            </button>
+            <button class="icon-button" id="downloadOutput" title="Download output">
+              <i data-lucide="file-down"></i>
+            </button>
+          </div>
+        </div>
+
+        <nav class="tabs" aria-label="Tool tabs">
+          <button class="tab active" data-panel="resume"><i data-lucide="file-text"></i><span>Resume</span></button>
+          <button class="tab" data-panel="portfolio"><i data-lucide="layout-template"></i><span>Portfolio</span></button>
+          <button class="tab" data-panel="score"><i data-lucide="gauge"></i><span>Score</span></button>
+          <button class="tab" data-panel="interview"><i data-lucide="messages-square"></i><span>Interview</span></button>
+          <button class="tab" data-panel="chat"><i data-lucide="message-circle"></i><span>Chat</span></button>
+        </nav>
+
+        <div class="tool-grid">
+          <section class="control-surface" id="panel-resume">
+            <h3>ATS Resume</h3>
+            <p>Generate a recruiter-readable resume with keyword alignment and missing-info prompts.</p>
+            <button class="primary-button generate-button" data-type="resume">
+              <i data-lucide="wand-sparkles"></i>
+              Build Resume
+            </button>
+          </section>
+
+          <section class="control-surface hidden" id="panel-portfolio">
+            <h3>Portfolio Content</h3>
+            <p>Create homepage copy, case-study templates, GitHub bio, LinkedIn About, and CTAs.</p>
+            <button class="primary-button generate-button" data-type="portfolio">
+              <i data-lucide="sparkles"></i>
+              Generate Portfolio
+            </button>
+          </section>
+
+          <section class="control-surface hidden" id="panel-score">
+            <h3>Hiring Probability</h3>
+            <p>Estimate readiness across role fit, ATS match, evidence strength, portfolio, and interview prep.</p>
+            <button class="primary-button generate-button" data-type="score">
+              <i data-lucide="activity"></i>
+              Calculate Score
+            </button>
+          </section>
+
+          <section class="control-surface hidden" id="panel-interview">
+            <h3>Interview Simulation</h3>
+            <div class="inline-fields">
+              <label>
+                Mode
+                <select id="interviewType">
+                  <option value="HR">HR</option>
+                  <option value="technical">Technical</option>
+                </select>
+              </label>
+              <label>
+                Questions
+                <input id="interviewRounds" type="number" min="1" max="10" value="5">
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="primary-button" id="startInterview">
+                <i data-lucide="play"></i>
+                Start
+              </button>
+              <button class="secondary-button" id="endInterview">
+                <i data-lucide="square"></i>
+                End
+              </button>
+            </div>
+            <div class="interview-box">
+              <div class="question-meta" id="questionMeta">No interview running</div>
+              <div class="question-text" id="questionText">Start an HR or technical interview when your profile is ready.</div>
+              <textarea id="interviewAnswer" rows="5" placeholder="Type your answer here..."></textarea>
+              <button class="primary-button" id="submitAnswer">
+                <i data-lucide="send"></i>
+                Submit Answer
+              </button>
+            </div>
+          </section>
+
+          <section class="control-surface hidden" id="panel-chat">
+            <h3>Career Copilot</h3>
+            <div class="chat-log" id="chatLog"></div>
+            <div class="chat-input">
+              <textarea id="chatMessage" rows="3" placeholder="Ask for career advice, resume edits, project ideas, or interview help."></textarea>
+              <button class="primary-button" id="sendChat">
+                <i data-lucide="send"></i>
+                Send
+              </button>
+            </div>
+            <button class="secondary-button" id="clearChat">
+              <i data-lucide="trash-2"></i>
+              Clear Chat
+            </button>
+          </section>
+
+          <section class="output-panel">
+            <div class="output-status" id="outputStatus">Ready</div>
+            <article id="outputText" class="output-document">Save your profile, then choose a tool to begin.</article>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
