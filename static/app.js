@@ -12,7 +12,14 @@ const titles = {
   chat: "Career Copilot Chat",
 };
 
-const resumeThemes = new Set(["modern", "classic", "executive", "creative"]);
+const resumeThemes = new Set([
+  "modern",
+  "classic",
+  "executive",
+  "creative",
+  "minimal",
+  "sidebar",
+]);
 
 const cityOptions = {
   "Tamil Nadu": [
@@ -242,9 +249,9 @@ function normalizedResumeTheme(value) {
   return resumeThemes.has(value) ? value : "modern";
 }
 
-function renderResumeShell(content) {
+function resumeViewModel(content) {
   const profile = profilePayload();
-  const resumeTheme = normalizedResumeTheme(profile.resume_theme);
+  const theme = normalizedResumeTheme(profile.resume_theme);
   const contactItems = [
     [profile.city, profile.state].filter(Boolean).join(", "),
     fullPhoneNumber(profile),
@@ -256,28 +263,91 @@ function renderResumeShell(content) {
   const photo = state.profilePhoto
     ? `<img src="${state.profilePhoto}" alt="Candidate profile photo">`
     : `<span>${profileInitials(profile.name)}</span>`;
+  const name = escapeHtml(profile.name || "Candidate Name");
+  const role = escapeHtml(profile.target_role || "Target Role");
+  const body = renderOutputBody(cleanResumeBody(content, profile));
+  const contactHtml = contactItems.map((item) => `<span>${escapeHtml(item)}</span>`).join("");
+  const highlightsHtml = [
+    "ATS-ready",
+    "Project-focused",
+    skillHint,
+  ]
+    .filter(Boolean)
+    .map((item) => `<span>${escapeHtml(item)}</span>`)
+    .join("");
+
+  return {
+    theme,
+    photo,
+    name,
+    role,
+    body,
+    contactHtml,
+    highlightsHtml,
+  };
+}
+
+function renderResumeIdentity(view) {
+  return `
+    <div class="resume-identity">
+      <div class="resume-photo">${view.photo}</div>
+      <div>
+        <h1>${view.name}</h1>
+        <p class="resume-role">${view.role}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderResumeShell(content) {
+  const view = resumeViewModel(content);
+
+  if (view.theme === "sidebar") {
+    return `
+      <section class="resume-template resume-theme-${view.theme} resume-layout-sidebar">
+        <aside class="resume-sidebar">
+          <div class="resume-photo">${view.photo}</div>
+          <h1>${view.name}</h1>
+          <p class="resume-role">${view.role}</p>
+          <div class="resume-contact">${view.contactHtml}</div>
+          <div class="resume-highlight">${view.highlightsHtml}</div>
+        </aside>
+        <main class="resume-main">
+          <div class="resume-body">${view.body}</div>
+        </main>
+      </section>
+    `;
+  }
+
+  if (view.theme === "minimal") {
+    return `
+      <section class="resume-template resume-theme-${view.theme} resume-layout-minimal">
+        <header class="resume-minimal-header">
+          <div>
+            <h1>${view.name}</h1>
+            <p class="resume-role">${view.role}</p>
+          </div>
+          <div class="resume-contact">${view.contactHtml}</div>
+        </header>
+        <div class="resume-highlight">${view.highlightsHtml}</div>
+        <div class="resume-body">${view.body}</div>
+      </section>
+    `;
+  }
 
   return `
-    <section class="resume-template resume-theme-${resumeTheme}">
+    <section class="resume-template resume-theme-${view.theme}">
       <header class="resume-hero">
-        <div class="resume-identity">
-          <div class="resume-photo">${photo}</div>
-          <div>
-            <h1>${escapeHtml(profile.name || "Candidate Name")}</h1>
-            <p class="resume-role">${escapeHtml(profile.target_role || "Target Role")}</p>
-          </div>
-        </div>
+        ${renderResumeIdentity(view)}
         <div class="resume-contact">
-          ${contactItems.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
+          ${view.contactHtml}
         </div>
       </header>
       <div class="resume-highlight">
-        <span>ATS-ready</span>
-        <span>Project-focused</span>
-        <span>${escapeHtml(skillHint)}</span>
+        ${view.highlightsHtml}
       </div>
       <div class="resume-body">
-        ${renderOutputBody(cleanResumeBody(content, profile))}
+        ${view.body}
       </div>
     </section>
   `;

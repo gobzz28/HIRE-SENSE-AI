@@ -463,6 +463,7 @@ select:focus {
   --resume-chip: #ffffff;
   --resume-chip-border: #c4e2dd;
   --resume-chip-text: #0d5d57;
+  color: #172026;
 }
 
 .resume-hero {
@@ -484,6 +485,29 @@ select:focus {
   --resume-chip-text: #163d5c;
 }
 
+.resume-theme-classic .resume-hero {
+  color: #102a43;
+  background: #ffffff;
+  border-bottom: 4px double #1f4f7a;
+}
+
+.resume-theme-classic .resume-hero h1,
+.resume-theme-classic .resume-role {
+  color: #102a43;
+}
+
+.resume-theme-classic .resume-photo {
+  color: #1f4f7a;
+  background: #eef5fb;
+  border-color: #c7dceb;
+}
+
+.resume-theme-classic .resume-contact span {
+  color: #163d5c;
+  background: #eef5fb;
+  border-color: #c7dceb;
+}
+
 .resume-theme-executive {
   --resume-primary: #111820;
   --resume-secondary: #3b4650;
@@ -492,12 +516,65 @@ select:focus {
   --resume-chip-text: #172026;
 }
 
+.resume-theme-executive .resume-hero {
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding-top: 34px;
+  padding-bottom: 24px;
+  background: #111820;
+}
+
+.resume-theme-executive .resume-identity {
+  justify-content: space-between;
+  flex-direction: row-reverse;
+}
+
+.resume-theme-executive .resume-contact {
+  justify-content: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+}
+
 .resume-theme-creative {
   --resume-primary: #6c3fa4;
   --resume-secondary: #1f6f95;
   --resume-soft: #f5f0fb;
   --resume-chip-border: #decff0;
   --resume-chip-text: #553184;
+}
+
+.resume-theme-creative .resume-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(108, 63, 164, 0.96), rgba(31, 111, 149, 0.96));
+}
+
+.resume-theme-creative .resume-hero::after {
+  content: "";
+  position: absolute;
+  right: -62px;
+  bottom: -62px;
+  width: 180px;
+  height: 180px;
+  border: 24px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+}
+
+.resume-theme-minimal {
+  --resume-primary: #2f3a40;
+  --resume-secondary: #111820;
+  --resume-soft: #f7f8f8;
+  --resume-chip-border: #d8dee2;
+  --resume-chip-text: #2f3a40;
+}
+
+.resume-theme-sidebar {
+  --resume-primary: #0f766e;
+  --resume-secondary: #17324d;
+  --resume-soft: #eaf7f4;
+  --resume-chip-border: #b7ddd6;
+  --resume-chip-text: #0f5f58;
 }
 
 .resume-identity {
@@ -611,6 +688,90 @@ select:focus {
 
 .resume-body {
   padding: 26px 30px 34px;
+}
+
+.resume-layout-minimal .resume-minimal-header {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, 0.8fr);
+  gap: 20px;
+  align-items: start;
+  padding: 30px 30px 18px;
+  border-top: 8px solid var(--resume-primary);
+  border-bottom: 1px solid var(--resume-chip-border);
+}
+
+.resume-layout-minimal h1 {
+  margin: 0;
+  color: #111820;
+  font-size: clamp(1.45rem, 2vw, 2.15rem);
+  text-transform: uppercase;
+}
+
+.resume-layout-minimal .resume-role {
+  color: #4d5a61;
+}
+
+.resume-layout-minimal .resume-contact span,
+.resume-layout-minimal .resume-highlight span {
+  color: #2f3a40;
+  background: #ffffff;
+  border-color: #d8dee2;
+}
+
+.resume-layout-sidebar {
+  display: grid;
+  grid-template-columns: minmax(190px, 245px) minmax(0, 1fr);
+  min-height: 100%;
+}
+
+.resume-sidebar {
+  padding: 28px 22px;
+  color: #ffffff;
+  background: linear-gradient(180deg, var(--resume-secondary), var(--resume-primary));
+}
+
+.resume-sidebar .resume-photo {
+  width: 116px;
+  height: 132px;
+  margin-bottom: 20px;
+}
+
+.resume-sidebar h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.65rem;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.resume-sidebar .resume-role {
+  color: #e8f7f5;
+}
+
+.resume-sidebar .resume-contact,
+.resume-sidebar .resume-highlight {
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.resume-sidebar .resume-contact span,
+.resume-sidebar .resume-highlight span {
+  width: 100%;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.26);
+  border-radius: 8px;
+}
+
+.resume-sidebar .resume-highlight {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.resume-main {
+  min-width: 0;
+  background: #ffffff;
 }
 
 .output-document h1,
@@ -859,31 +1020,36 @@ textarea::placeholder {
 }
 
 .resume-template {
-  background: var(--surface);
-  --resume-primary: #0a0610;
-  --resume-secondary: #4c1d95;
-  --resume-soft: #170f24;
-  --resume-chip: #0d0814;
-  --resume-chip-border: #55307d;
-  --resume-chip-text: #d8b4fe;
+  background: #ffffff;
 }
 
 .resume-hero h1,
 .resume-role,
 .resume-contact span,
 .resume-photo {
-  color: var(--ink);
+  color: inherit;
 }
 
-.resume-contact span,
-.resume-highlight span {
-  background: #130b1d;
-  border-color: #55307d;
-  color: var(--ink);
+.resume-hero h1,
+.resume-theme-modern .resume-role,
+.resume-theme-executive .resume-role,
+.resume-theme-creative .resume-role,
+.resume-theme-sidebar .resume-role {
+  color: #ffffff;
+}
+
+.resume-template .resume-body,
+.resume-template .resume-body h1,
+.resume-template .resume-body h2,
+.resume-template .resume-body h3,
+.resume-template .resume-body p,
+.resume-template .resume-body li,
+.resume-template .plain-line {
+  color: #172026;
 }
 
 .output-document strong {
-  color: #f0abfc;
+  color: var(--resume-chip-text, #0d5d57);
 }
 
 @media (max-width: 1020px) {
@@ -941,9 +1107,19 @@ textarea::placeholder {
 
   .resume-hero,
   .resume-highlight,
-  .resume-body {
+  .resume-body,
+  .resume-minimal-header {
     padding-left: 18px;
     padding-right: 18px;
+  }
+
+  .resume-layout-minimal .resume-minimal-header,
+  .resume-layout-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-sidebar {
+    padding: 22px 18px;
   }
 
   .tab {

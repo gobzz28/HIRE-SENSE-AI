@@ -790,17 +790,55 @@ def draw_pdf_wrapped_text(
     return y
 
 
-def draw_pdf_section_title(stream_lines: list[str], x: float, y: float, title: str) -> float:
-    teal = (0.10, 0.50, 0.52)
-    draw_pdf_text(stream_lines, x, y, title, size=24, font="F2", color=teal)
+def draw_pdf_rect(
+    stream_lines: list[str],
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    color: tuple[float, float, float],
+) -> None:
+    r, g, b = color
+    stream_lines.append(f"{r:.3f} {g:.3f} {b:.3f} rg")
+    stream_lines.append(f"{x:.1f} {y:.1f} {width:.1f} {height:.1f} re f")
+
+
+def draw_pdf_line(
+    stream_lines: list[str],
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    color: tuple[float, float, float],
+    width: float = 1.0,
+) -> None:
+    r, g, b = color
     stream_lines.extend(
         [
-            "0.10 0.50 0.52 RG",
+            f"{r:.3f} {g:.3f} {b:.3f} RG",
+            f"{width:.1f} w",
+            f"{x1:.1f} {y1:.1f} m {x2:.1f} {y2:.1f} l S",
+        ]
+    )
+
+
+def draw_pdf_section_title(
+    stream_lines: list[str],
+    x: float,
+    y: float,
+    title: str,
+    color: tuple[float, float, float] = (0.10, 0.50, 0.52),
+    width: float = 190,
+) -> float:
+    draw_pdf_text(stream_lines, x, y, title, size=24, font="F2", color=color)
+    stream_lines.extend(
+        [
+            f"{color[0]:.3f} {color[1]:.3f} {color[2]:.3f} RG",
             "1.6 w",
             f"{x:.1f} {y - 8:.1f} m",
-            f"{x + 190:.1f} {y - 8:.1f} l",
+            f"{x + width:.1f} {y - 8:.1f} l",
             "S",
-            *pdf_circle_path(x + 195, y - 8, 4),
+            *pdf_circle_path(x + width + 5, y - 8, 4),
             "S",
         ]
     )
@@ -840,6 +878,137 @@ def candidate_pdf_contact_items(profile: dict[str, Any]) -> list[str]:
         ]
         if item
     ]
+
+
+PDF_RESUME_THEMES = {"modern", "classic", "executive", "creative", "minimal", "sidebar"}
+
+
+def normalized_pdf_resume_theme(profile: dict[str, Any]) -> str:
+    theme = str(profile.get("resume_theme", "modern")).strip().lower()
+    return theme if theme in PDF_RESUME_THEMES else "modern"
+
+
+def pdf_theme_colors(theme: str) -> dict[str, tuple[float, float, float]]:
+    themes = {
+        "modern": {
+            "primary": (0.10, 0.50, 0.52),
+            "secondary": (0.08, 0.20, 0.29),
+            "soft": (0.90, 0.96, 0.95),
+            "paper": (0.90, 0.93, 0.88),
+            "body": (0.20, 0.40, 0.40),
+        },
+        "classic": {
+            "primary": (0.12, 0.31, 0.48),
+            "secondary": (0.06, 0.16, 0.26),
+            "soft": (0.93, 0.96, 0.98),
+            "paper": (1.00, 1.00, 1.00),
+            "body": (0.14, 0.22, 0.30),
+        },
+        "executive": {
+            "primary": (0.07, 0.09, 0.12),
+            "secondary": (0.23, 0.27, 0.31),
+            "soft": (0.94, 0.95, 0.96),
+            "paper": (1.00, 1.00, 1.00),
+            "body": (0.16, 0.18, 0.20),
+        },
+        "creative": {
+            "primary": (0.42, 0.25, 0.64),
+            "secondary": (0.12, 0.44, 0.58),
+            "soft": (0.96, 0.94, 0.98),
+            "paper": (1.00, 1.00, 1.00),
+            "body": (0.20, 0.22, 0.30),
+        },
+        "minimal": {
+            "primary": (0.18, 0.23, 0.25),
+            "secondary": (0.07, 0.09, 0.12),
+            "soft": (0.97, 0.98, 0.98),
+            "paper": (1.00, 1.00, 1.00),
+            "body": (0.13, 0.16, 0.18),
+        },
+        "sidebar": {
+            "primary": (0.06, 0.46, 0.43),
+            "secondary": (0.09, 0.20, 0.30),
+            "soft": (0.92, 0.97, 0.96),
+            "paper": (1.00, 1.00, 1.00),
+            "body": (0.18, 0.25, 0.28),
+        },
+    }
+    return themes.get(theme, themes["modern"])
+
+
+def draw_pdf_profile_photo(
+    stream_lines: list[str],
+    photo_ref: str,
+    x: float,
+    y: float,
+    size: float,
+    initials: str,
+    colors: dict[str, tuple[float, float, float]],
+    dark_photo: bool = False,
+) -> None:
+    if photo_ref:
+        stream_lines.extend(["q", f"{size:.1f} 0 0 {size:.1f} {x:.1f} {y:.1f} cm", "/Im1 Do", "Q"])
+        return
+
+    draw_pdf_rect(
+        stream_lines,
+        x,
+        y,
+        size,
+        size,
+        (0.88, 0.93, 0.92) if not dark_photo else (0.18, 0.34, 0.39),
+    )
+    draw_pdf_text(
+        stream_lines,
+        x + size * 0.34,
+        y + size * 0.46,
+        initials,
+        size=22,
+        font="F2",
+        color=colors["primary"] if not dark_photo else (1, 1, 1),
+    )
+
+
+def draw_pdf_contact_items(
+    stream_lines: list[str],
+    items: list[str],
+    x: float,
+    y: float,
+    width: int,
+    color: tuple[float, float, float],
+    max_items: int = 4,
+) -> float:
+    for item in items[:max_items]:
+        y = draw_pdf_wrapped_text(
+            stream_lines,
+            x,
+            y,
+            item,
+            width=width,
+            size=9,
+            leading=12,
+            color=color,
+            max_lines=2,
+        ) - 3
+    return y
+
+
+def draw_pdf_skill_list(
+    stream_lines: list[str],
+    x: float,
+    y: float,
+    skills_text: str,
+    width: int,
+    colors: dict[str, tuple[float, float, float]],
+    max_items: int = 8,
+) -> float:
+    skill_items = [item.strip(" -") for item in re.split(r"[\n,;]+", skills_text) if item.strip()]
+    for item in skill_items[:max_items]:
+        draw_pdf_text(stream_lines, x, y, item[:32], size=9, font="F2", color=colors["body"])
+        draw_pdf_rect(stream_lines, x, y - 7, 112, 3.5, (0.80, 0.86, 0.86))
+        draw_pdf_rect(stream_lines, x, y - 7, 76, 3.5, colors["primary"])
+        y -= 17
+    return y
 
 
 def resume_pdf_sections(content: str, profile: dict[str, Any]) -> dict[str, list[str]]:
@@ -913,69 +1082,9 @@ def build_pdf(title: str, content: str, profile: dict[str, Any] | None = None) -
     name = str(profile.get("name", "")).strip() or "Candidate Name"
     role = str(profile.get("target_role", "")).strip() or "Target Role"
     initials = "".join(part[:1] for part in name.split()[:2]).upper() or "HS"
-    teal = (0.10, 0.50, 0.52)
-    dark_teal = (0.08, 0.37, 0.38)
-    body_color = (0.20, 0.40, 0.40)
-
-    stream_lines: list[str] = [
-        "0.04 0.05 0.07 rg",
-        "0 0 612 792 re f",
-        "0.90 0.93 0.88 rg",
-        "26 58 560 650 re f",
-        "0.78 0.88 0.86 rg",
-        "26 58 m 220 58 l 26 126 l h f",
-        "0.83 0.91 0.89 rg",
-        "586 58 m 380 58 l 586 160 l h f",
-    ]
-
-    if photo_ref:
-        stream_lines.extend(
-            [
-                "q",
-                "150 0 0 150 48 575 cm",
-                "/Im1 Do",
-                "Q",
-            ]
-        )
-    else:
-        stream_lines.extend(["0.76 0.86 0.84 rg", *pdf_circle_path(123, 650, 75), "f"])
-        draw_pdf_text(stream_lines, 103, 642, initials, size=26, font="F2", color=teal)
-
-    stream_lines.extend(
-        [
-            "0.10 0.50 0.52 RG",
-            "8 w",
-            *pdf_circle_path(123, 650, 78),
-            "S",
-            "1.6 w",
-            "198 648 m 586 648 l S",
-            *pdf_circle_path(202, 648, 4),
-            "S",
-        ]
-    )
-    draw_pdf_text(stream_lines, 245, 665, name, size=28, font="F2", color=dark_teal)
-    draw_pdf_text(stream_lines, 275, 626, role, size=20, font="F2", color=dark_teal)
-
-    left_x = 80
-    right_x = 316
-    left_y = 540
-    right_y = 540
-
-    left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Contact")
-    for item in candidate_pdf_contact_items(profile):
-        stream_lines.extend(["0.10 0.50 0.52 rg", f"{left_x:.1f} {left_y + 3:.1f} 8 8 re f"])
-        left_y = draw_pdf_wrapped_text(
-            stream_lines,
-            left_x + 22,
-            left_y,
-            item,
-            width=28,
-            size=9,
-            leading=12,
-            color=body_color,
-            max_lines=2,
-        ) - 4
-
+    theme = normalized_pdf_resume_theme(profile)
+    colors = pdf_theme_colors(theme)
+    body_color = colors["body"]
     education_lines = sections.get("Education", [])
     if not education_lines:
         education_lines = [
@@ -989,49 +1098,8 @@ def build_pdf(title: str, content: str, profile: dict[str, Any] | None = None) -
             ]
             if value
         ]
-    left_y -= 8
-    left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Education")
-    left_y = draw_pdf_wrapped_text(
-        stream_lines,
-        left_x,
-        left_y,
-        "\n".join(education_lines[:8]) or "Education details available on request.",
-        width=30,
-        size=9,
-        leading=12,
-        color=body_color,
-        max_lines=11,
-    )
-
     skills_text = "\n".join(sections.get("Skills", [])) or str(profile.get("skills", "")).strip()
-    left_y -= 10
-    left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Skills")
-    skill_items = [item.strip(" -") for item in re.split(r"[\n,;]+", skills_text) if item.strip()]
-    for item in skill_items[:7]:
-        draw_pdf_text(stream_lines, left_x, left_y, item[:26], size=9, font="F2", color=body_color)
-        stream_lines.extend(
-            [
-                "0.63 0.80 0.77 rg",
-                f"{left_x + 100:.1f} {left_y - 2:.1f} 70 5 re f",
-                "0.10 0.50 0.52 rg",
-                f"{left_x + 100:.1f} {left_y - 2:.1f} 45 5 re f",
-            ]
-        )
-        left_y -= 18
-
-    right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Profile")
-    right_y = draw_pdf_wrapped_text(
-        stream_lines,
-        right_x,
-        right_y,
-        " ".join(sections.get("Profile", [])) or content,
-        width=42,
-        size=10,
-        leading=13,
-        color=body_color,
-        max_lines=10,
-    )
-
+    profile_text = " ".join(sections.get("Profile", [])) or content
     experience_lines = sections.get("Experience", [])
     if not experience_lines:
         experience_lines = [
@@ -1042,19 +1110,115 @@ def build_pdf(title: str, content: str, profile: dict[str, Any] | None = None) -
             ]
             if line
         ]
-    right_y -= 18
-    right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Experience")
-    draw_pdf_wrapped_text(
-        stream_lines,
-        right_x,
-        right_y,
-        "\n".join(experience_lines[:18]) or "Add project or internship experience.",
-        width=42,
-        size=9,
-        leading=12,
-        color=body_color,
-        max_lines=23,
-    )
+    contact_items = candidate_pdf_contact_items(profile)
+    experience_text = "\n".join(experience_lines[:18]) or "Add project or internship experience."
+
+    stream_lines: list[str] = []
+    draw_pdf_rect(stream_lines, 0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT, colors["paper"])
+
+    if theme == "sidebar":
+        draw_pdf_rect(stream_lines, 0, 0, 220, PDF_PAGE_HEIGHT, colors["secondary"])
+        draw_pdf_rect(stream_lines, 0, 0, 220, 260, colors["primary"])
+        draw_pdf_profile_photo(stream_lines, photo_ref, 52, 608, 116, initials, colors, dark_photo=True)
+        draw_pdf_text(stream_lines, 32, 570, name.upper(), size=22, font="F2", color=(1, 1, 1))
+        draw_pdf_wrapped_text(stream_lines, 32, 542, role, width=24, size=12, leading=15, color=(0.90, 0.98, 0.97), max_lines=2)
+        draw_pdf_line(stream_lines, 32, 505, 188, 505, (0.90, 0.98, 0.97), width=1.2)
+        draw_pdf_text(stream_lines, 32, 476, "CONTACT", size=13, font="F2", color=(1, 1, 1))
+        y = draw_pdf_contact_items(stream_lines, contact_items, 32, 452, 26, (0.90, 0.98, 0.97))
+        draw_pdf_text(stream_lines, 32, y - 16, "SKILLS", size=13, font="F2", color=(1, 1, 1))
+        draw_pdf_wrapped_text(stream_lines, 32, y - 40, skills_text or "Add role-relevant skills.", width=26, size=9, leading=12, color=(0.90, 0.98, 0.97), max_lines=14)
+
+        right_x = 252
+        right_y = 710
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Profile", colors["primary"], width=260)
+        right_y = draw_pdf_wrapped_text(stream_lines, right_x, right_y, profile_text, width=48, size=10, leading=13, color=body_color, max_lines=10)
+        right_y -= 18
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Experience", colors["primary"], width=260)
+        right_y = draw_pdf_wrapped_text(stream_lines, right_x, right_y, experience_text, width=48, size=9, leading=12, color=body_color, max_lines=20)
+        right_y -= 18
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Education", colors["primary"], width=260)
+        draw_pdf_wrapped_text(stream_lines, right_x, right_y, "\n".join(education_lines[:8]) or "Education details available on request.", width=48, size=9, leading=12, color=body_color, max_lines=9)
+
+    elif theme in {"minimal", "classic"}:
+        top_y = 735
+        if theme == "classic":
+            draw_pdf_text(stream_lines, 54, top_y, name.upper(), size=27, font="F2", color=colors["secondary"])
+            draw_pdf_text(stream_lines, 54, top_y - 28, role, size=13, font="F2", color=colors["primary"])
+            draw_pdf_contact_items(stream_lines, contact_items, 360, top_y - 2, 28, body_color)
+            draw_pdf_line(stream_lines, 54, 675, 558, 675, colors["primary"], width=2.2)
+        else:
+            draw_pdf_text(stream_lines, 54, top_y, name.upper(), size=25, font="F2", color=colors["secondary"])
+            draw_pdf_text(stream_lines, 54, top_y - 26, role, size=12, font="F2", color=(0.32, 0.36, 0.38))
+            draw_pdf_contact_items(stream_lines, contact_items, 356, top_y - 4, 30, body_color)
+            draw_pdf_line(stream_lines, 54, 676, 558, 676, (0.78, 0.81, 0.82), width=1.1)
+
+        left_x = 54
+        right_x = 344
+        left_y = 632
+        right_y = 632
+        left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Profile", colors["primary"], width=220)
+        left_y = draw_pdf_wrapped_text(stream_lines, left_x, left_y, profile_text, width=42, size=10, leading=13, color=body_color, max_lines=11)
+        left_y -= 16
+        left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Experience", colors["primary"], width=220)
+        draw_pdf_wrapped_text(stream_lines, left_x, left_y, experience_text, width=42, size=9, leading=12, color=body_color, max_lines=22)
+
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Skills", colors["primary"], width=160)
+        right_y = draw_pdf_skill_list(stream_lines, right_x, right_y, skills_text, 28, colors, max_items=8)
+        right_y -= 16
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Education", colors["primary"], width=160)
+        draw_pdf_wrapped_text(stream_lines, right_x, right_y, "\n".join(education_lines[:8]) or "Education details available on request.", width=30, size=9, leading=12, color=body_color, max_lines=12)
+
+    else:
+        if theme == "modern":
+            draw_pdf_rect(stream_lines, 26, 58, 560, 650, colors["paper"])
+            draw_pdf_rect(stream_lines, 26, 58, 194, 68, (0.78, 0.88, 0.86))
+            draw_pdf_rect(stream_lines, 380, 58, 206, 102, (0.83, 0.91, 0.89))
+        else:
+            draw_pdf_rect(stream_lines, 26, 58, 560, 650, (1.00, 1.00, 1.00))
+            draw_pdf_rect(stream_lines, 26, 606, 560, 102, colors["secondary"])
+            if theme == "creative":
+                draw_pdf_rect(stream_lines, 26, 58, 18, 650, colors["primary"])
+
+        draw_pdf_profile_photo(stream_lines, photo_ref, 48, 575, 150, initials, colors)
+        draw_pdf_line(stream_lines, 198, 648, 586, 648, colors["primary"], width=1.6)
+        draw_pdf_text(
+            stream_lines,
+            245,
+            665,
+            name,
+            size=28,
+            font="F2",
+            color=colors["secondary"] if theme == "modern" else (1, 1, 1),
+        )
+        draw_pdf_text(
+            stream_lines,
+            275,
+            626,
+            role,
+            size=20,
+            font="F2",
+            color=colors["secondary"] if theme == "modern" else (0.92, 0.96, 0.96),
+        )
+
+        left_x = 80
+        right_x = 316
+        left_y = 540
+        right_y = 540
+
+        left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Contact", colors["primary"])
+        left_y = draw_pdf_contact_items(stream_lines, contact_items, left_x + 20, left_y, 28, body_color)
+        left_y -= 8
+        left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Education", colors["primary"])
+        left_y = draw_pdf_wrapped_text(stream_lines, left_x, left_y, "\n".join(education_lines[:8]) or "Education details available on request.", width=30, size=9, leading=12, color=body_color, max_lines=11)
+        left_y -= 10
+        left_y = draw_pdf_section_title(stream_lines, left_x, left_y, "Skills", colors["primary"])
+        draw_pdf_skill_list(stream_lines, left_x, left_y, skills_text, 26, colors, max_items=7)
+
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Profile", colors["primary"])
+        right_y = draw_pdf_wrapped_text(stream_lines, right_x, right_y, profile_text, width=42, size=10, leading=13, color=body_color, max_lines=10)
+        right_y -= 18
+        right_y = draw_pdf_section_title(stream_lines, right_x, right_y, "Experience", colors["primary"])
+        draw_pdf_wrapped_text(stream_lines, right_x, right_y, experience_text, width=42, size=9, leading=12, color=body_color, max_lines=23)
 
     stream = "\n".join(stream_lines).encode("latin-1", errors="replace")
     page_object_id = len(objects) + 1
