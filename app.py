@@ -23,7 +23,14 @@ from openai import (
 )
 
 
-HISTORY_FILE = Path("hiresense_chat_history.json")
+HISTORY_FILE = Path(
+    os.getenv(
+        "HISTORY_FILE",
+        "/tmp/hiresense_chat_history.json"
+        if os.getenv("VERCEL")
+        else "hiresense_chat_history.json",
+    )
+)
 DEFAULT_MODEL = "gpt-5.2"
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
